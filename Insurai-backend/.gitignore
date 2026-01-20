@@ -1,0 +1,39 @@
+# ================= CRITICAL: NEVER COMMIT THESE =================
+.env
+*.env
+application-local.properties
+
+# ================= BUILD & DEPENDENCIES =================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# ================= IDE FILES =================
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+.settings/
+
+# ================= LOGS =================
+*.log
+logs/
+
+# ================= UPLOADS & TEMP FILES =================
+uploads/
+temp/
+*.tmp
+
+# ================= OS FILES =================
+Thumbs.db
+desktop.ini
