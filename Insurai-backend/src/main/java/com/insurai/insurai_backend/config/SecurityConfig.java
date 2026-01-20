@@ -9,6 +9,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
@@ -29,9 +34,9 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> {}) // Keep global CORS
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                // ✅✅✅ MOST IMPORTANT: Public endpoints FIRST ✅✅✅
+                // Public endpoints
                 .requestMatchers("/", "/health", "/actuator/**", "/error").permitAll()
                 
                 // Public authentication endpoints
@@ -49,7 +54,7 @@ public class SecurityConfig {
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/employee/policies").permitAll()
                 
-                // Public admin endpoints (you can secure later)
+                // Public admin endpoints
                 .requestMatchers("/admin/**").permitAll()
                 .requestMatchers("/admin/policies").permitAll()
                 .requestMatchers("/admin/policies/save").permitAll()
@@ -58,22 +63,22 @@ public class SecurityConfig {
                 .requestMatchers("/agent/availability/**").permitAll()
                 .requestMatchers("/agent/queries/pending/**").permitAll()
                 
-                // Temporarily public (you can secure later)
+                // Temporarily public
                 .requestMatchers("/employees/**").permitAll()
                 .requestMatchers("/hr/**").permitAll()
                 
-                // 🔒 Secured Employee endpoints
+                // Secured Employee endpoints
                 .requestMatchers("/employee/claims/**").hasRole("EMPLOYEE")
                 .requestMatchers("/employee/queries/**").hasRole("EMPLOYEE")
                 .requestMatchers("/employee/chatbot").hasRole("EMPLOYEE")
                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")
                 
-                // 🔒 Secured Agent endpoints
+                // Secured Agent endpoints
                 .requestMatchers("/agent/queries/respond/**").hasRole("AGENT")
                 .requestMatchers("/agent/queries/all/**").hasRole("AGENT")
                 .requestMatchers("/agent/**").hasRole("AGENT")
                 
-                // 🔒 Secured HR/Admin claim endpoints
+                // Secured HR/Admin endpoints
                 .requestMatchers("/hr/claims").hasAnyRole("HR", "ADMIN")
                 .requestMatchers("/admin/claims").hasAnyRole("HR", "ADMIN")
                 .requestMatchers("/hr/claims/fraud").hasRole("HR")
@@ -84,23 +89,52 @@ public class SecurityConfig {
                     "/claims/all"
                 ).hasAnyRole("HR", "ADMIN")
                 
-                // 🔒 Notifications endpoints
+                // Notifications endpoints
                 .requestMatchers("/notifications/user/**").hasAnyAuthority("ROLE_EMPLOYEE", "ROLE_HR", "ROLE_ADMIN")
                 .requestMatchers("/notifications/**").hasAnyRole("HR", "ADMIN")
                 .requestMatchers("/notifications/*/read").hasAnyAuthority("ROLE_EMPLOYEE", "ROLE_HR", "ROLE_ADMIN")
 
-                // Everything else requires authentication
                 .anyRequest().authenticated()
             )
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(formLogin -> formLogin.disable());
 
-        // Add JWT filters in order
         http.addFilterBefore(employeeJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(agentJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(hrJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // ⚠️ IMPORTANT: Add your actual Netlify URL here
+        configuration.setAllowedOrigins(Arrays.asList(
+            "https://insureai3.netlify.app/",  // ← CHANGE THIS
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://localhost:5174"
+        ));
+        
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        ));
+        
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        
+        configuration.setExposedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Type"
+        ));
+        
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
