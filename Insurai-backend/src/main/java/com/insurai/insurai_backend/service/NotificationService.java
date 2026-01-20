@@ -2,6 +2,7 @@ package com.insurai.insurai_backend.service;
 
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ public class NotificationService {
 
     private final JavaMailSender mailSender;
 
+    @Autowired(required = false)
     public NotificationService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
@@ -29,6 +31,10 @@ public class NotificationService {
     // ========================= Claim Notifications =========================
 
     public void sendClaimStatusEmail(String to, Claim claim) {
+        if (mailSender == null) {
+            System.out.println("⚠️ Mail service not configured. Skipping claim status email to: " + to);
+            return;
+        }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -80,6 +86,10 @@ public class NotificationService {
     }
 
     public void sendNewClaimAssignedToHr(String to, Hr hr, Claim claim) {
+        if (mailSender == null) {
+            System.out.println("⚠️ Mail service not configured. Skipping HR notification email to: " + to);
+            return;
+        }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -124,6 +134,10 @@ public class NotificationService {
     // ========================= Employee-Agent Query Notifications =========================
 
     public void sendEmployeeQueryNotificationToAgent(String to, EmployeeQuery query) {
+        if (mailSender == null) {
+            System.out.println("⚠️ Mail service not configured. Skipping agent query notification to: " + to);
+            return;
+        }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -163,8 +177,11 @@ public class NotificationService {
         }
     }
 
-    // 🔹 NEW: Agent response notification to Employee
     public void sendAgentResponseNotificationToEmployee(String to, EmployeeQuery query) {
+        if (mailSender == null) {
+            System.out.println("⚠️ Mail service not configured. Skipping employee response notification to: " + to);
+            return;
+        }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -208,6 +225,10 @@ public class NotificationService {
     // ========================= Enrollment Notifications =========================
 
     public void sendEnrollmentApprovalEmail(String to, String employeeName, String policyName, java.time.LocalDate effectiveDate) {
+        if (mailSender == null) {
+            System.out.println("⚠️ Mail service not configured. Skipping enrollment approval email to: " + to);
+            return;
+        }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -243,6 +264,10 @@ public class NotificationService {
     // ========================= Reimbursement Notifications =========================
 
     public void sendReimbursementStatusEmail(String to, String employeeName, Long claimId, String status, Double amount) {
+        if (mailSender == null) {
+            System.out.println("⚠️ Mail service not configured. Skipping reimbursement status email to: " + to);
+            return;
+        }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -278,6 +303,10 @@ public class NotificationService {
     // ========================= Renewal Notifications =========================
 
     public void sendRenewalAlertEmail(String to, String employeeName, String policyName, java.time.LocalDate renewalDate, int daysRemaining) {
+        if (mailSender == null) {
+            System.out.println("⚠️ Mail service not configured. Skipping renewal alert email to: " + to);
+            return;
+        }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -312,6 +341,10 @@ public class NotificationService {
     }
 
     public void sendPolicyStatusEmail(String to, String employeeName, String policyName, String status) {
+        if (mailSender == null) {
+            System.out.println("⚠️ Mail service not configured. Skipping policy status email to: " + to);
+            return;
+        }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -342,9 +375,4 @@ public class NotificationService {
             System.err.println("❌ Failed to send policy status email: " + e.getMessage());
         }
     }
-
-    // 🔹 Future Expansion
-    // public void sendPendingClaimReminder(Hr hr, Claim claim) { ... }
-    // public void sendFraudAlert(String to, Claim claim) { ... }
-    // public void sendScheduledReport(String to, byte[] reportFile) { ... }
 }
